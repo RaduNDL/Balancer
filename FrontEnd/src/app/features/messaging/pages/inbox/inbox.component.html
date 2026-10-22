@@ -1,0 +1,261 @@
+<main class="dashboard messaging-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Private conversations</span>
+      <h1>A little more <em>connected.</em></h1>
+    </div>
+
+    <span class="chat-connection" role="status">
+      {{ chat.state() }}
+    </span>
+  </header>
+
+  @if (errorMessage() || chat.error()) {
+    <p class="message error" role="alert">
+      {{ errorMessage() || chat.error() }}
+    </p>
+  }
+
+  @if (notice()) {
+    <p class="message success" role="status">
+      {{ notice() }}
+    </p>
+  }
+
+  <div class="messaging-layout">
+    <aside class="company-card chat-sidebar">
+      <h2>Start a conversation</h2>
+
+      <form
+        [formGroup]="requestForm"
+        (ngSubmit)="request()"
+      >
+        <div class="form-group">
+          <label for="chat-email">Account email</label>
+
+          <input
+            id="chat-email"
+            type="email"
+            formControlName="email"
+            maxlength="254"
+            autocomplete="off"
+            placeholder="colleague@example.com"
+          >
+        </div>
+
+        <button
+          class="button button-primary full-width"
+          type="submit"
+          [disabled]="requesting()"
+        >
+          {{ requesting()
+            ? 'Requesting…'
+            : 'Request permission' }}
+        </button>
+      </form>
+
+      <p class="field-help">
+        Messages become available after the other person accepts.
+      </p>
+
+      <h3>Your conversations</h3>
+
+      <div class="chat-thread-list">
+        @for (conversation of chat.inbox(); track conversation.id) {
+          <button
+            type="button"
+            class="chat-thread"
+            [class.selected]="selectedId() === conversation.id"
+            (click)="select(conversation.id)"
+          >
+            <strong>{{ conversation.otherUserName }}</strong>
+
+            <span>
+              {{ conversation.canRespond
+                ? 'New request'
+                : conversation.state }}
+            </span>
+          </button>
+        } @empty {
+          <p class="muted">
+            Your conversations will appear here.
+          </p>
+        }
+      </div>
+
+      <p class="field-help">
+        Showing up to 200 recent conversations.
+      </p>
+    </aside>
+
+    <section
+      class="company-card chat-main"
+      aria-label="Conversation"
+    >
+      @if (active(); as conversation) {
+        <header class="chat-heading">
+          <div>
+            <h2>{{ conversation.otherUserName }}</h2>
+            <p class="muted">{{ conversation.otherUserEmail }}</p>
+          </div>
+
+          @if (conversation.state !== 'Blocked') {
+            <button
+              class="button button-ghost"
+              type="button"
+              [disabled]="deciding()"
+              (click)="decide('block')"
+            >
+              Block
+            </button>
+          }
+        </header>
+
+        @if (conversation.state === 'Pending') {
+          <div class="chat-consent">
+            @if (conversation.canRespond) {
+              <h3>
+                {{ conversation.otherUserName }}
+                would like to message you.
+              </h3>
+
+              <p>Accept to allow a private conversation.</p>
+
+              <div class="public-actions">
+                <button
+                  class="button button-primary"
+                  type="button"
+                  [disabled]="deciding()"
+                  (click)="decide('accept')"
+                >
+                  Accept
+                </button>
+
+                <button
+                  class="button button-secondary"
+                  type="button"
+                  [disabled]="deciding()"
+                  (click)="decide('decline')"
+                >
+                  Decline
+                </button>
+              </div>
+            } @else {
+              <h3>Waiting for permission.</h3>
+
+              <p>
+                No message can be sent until the request is accepted.
+              </p>
+            }
+          </div>
+        }
+
+        @if (conversation.state === 'Declined') {
+          <p class="chat-consent">
+            This conversation request was declined.
+            New requests are disabled.
+          </p>
+        }
+
+        @if (conversation.state === 'Blocked') {
+          <p class="chat-consent">
+            This conversation is blocked.
+            No new messages can be sent.
+          </p>
+        }
+
+        @if (conversation.hasHistory) {
+          <div
+            class="chat-messages"
+            #messageList
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-label="Messages"
+          >
+            @if (hasOlder()) {
+              <button
+                class="button button-ghost"
+                type="button"
+                [disabled]="loadingOlder()"
+                (click)="older()"
+              >
+                {{ loadingOlder()
+                  ? 'Loading…'
+                  : 'Load older messages' }}
+              </button>
+            }
+
+            @if (loadingMessages()) {
+              <p role="status">Loading messages…</p>
+            }
+
+            @for (message of messages(); track message.id) {
+              <article
+                class="chat-bubble"
+                [class.mine]="
+                  message.senderUserId === auth.currentUser()?.id
+                "
+              >
+                <small>
+                  {{ message.senderUserId === auth.currentUser()?.id
+                    ? 'You'
+                    : conversation.otherUserName }}
+                </small>
+
+                <!-- Afișăm text. Nu interpretăm HTML primit de la utilizator. -->
+                <p>{{ message.body }}</p>
+
+                <time [attr.datetime]="message.createdAtUtc">
+                  {{ message.createdAtUtc | date:'shortTime' }}
+                </time>
+              </article>
+            } @empty {
+              @if (!loadingMessages()) {
+                <p class="muted">
+                  Conversation accepted. Say hello.
+                </p>
+              }
+            }
+          </div>
+        }
+
+        @if (conversation.canSend) {
+          <form
+            class="chat-composer"
+            [formGroup]="messageForm"
+            (ngSubmit)="send()"
+          >
+            <label for="chat-body">Your message</label>
+
+            <textarea
+              id="chat-body"
+              formControlName="body"
+              rows="3"
+              maxlength="2000"
+              placeholder="Write a message…"
+            ></textarea>
+
+            <button
+              class="button button-primary"
+              type="submit"
+              [disabled]="sending() || messageForm.invalid"
+            >
+              {{ sending() ? 'Sending…' : 'Send message' }}
+            </button>
+          </form>
+        }
+      } @else {
+        <div class="chat-empty">
+          <span aria-hidden="true">✦</span>
+
+          <h2>Your conversations stay between you.</h2>
+
+          <p>
+            Select a conversation or request permission to start one.
+          </p>
+        </div>
+      }
+    </section>
+  </div>
+</main>

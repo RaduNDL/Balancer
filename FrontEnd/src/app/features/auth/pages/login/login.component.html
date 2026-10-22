@@ -1,0 +1,106 @@
+<main class="auth-layout">
+  <section class="auth-story" aria-labelledby="story-title">
+    <span class="eyebrow">A clearer way to work</span>
+
+    <h1 id="story-title">
+      Good work starts<br>
+      with a little <em>balance.</em>
+    </h1>
+
+    <p>
+      Your people. Your companies.
+      One shared place to move things forward.
+    </p>
+
+    <!-- Element vizual decorativ, fără date financiare inventate. -->
+    <div class="story-workspace" aria-hidden="true">
+      <div class="story-window">
+        <i></i><i></i><i></i>
+        <span>Your workspace</span>
+      </div>
+
+      <div class="story-card">
+        <span class="story-icon">↗</span>
+
+        <div>
+          <strong>Make space for what matters.</strong>
+          <span>A home for your team and your next idea.</span>
+        </div>
+      </div>
+
+      <div class="story-mini">
+        <span>Company</span>
+        <span>People</span>
+        <span>Clarity</span>
+      </div>
+    </div>
+
+    <span class="story-caption">
+      Less scattered. More connected.
+    </span>
+  </section>
+
+  <section class="auth-card" aria-labelledby="login-title">
+    <span class="eyebrow">Welcome back</span>
+
+    <h2 id="login-title">Pick up where you left off.</h2>
+    <p class="muted">Sign in to your Balancer account.</p>
+
+    @if (accountCreated) {
+      <p class="message success" role="status">
+        Your account is ready.
+        Sign in to find your starting point.
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="email">Email address</label>
+
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+          maxlength="254"
+          placeholder="you@company.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          maxlength="128"
+          placeholder="Your password"
+          required
+        >
+      </div>
+
+      @if (errorMessage()) {
+        <p class="message error" role="alert">
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <button
+        class="button button-primary full-width"
+        type="submit"
+        [disabled]="loading()"
+      >
+        {{ loading() ? 'Signing in…' : 'Sign in' }}
+        <span aria-hidden="true">↗</span>
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      New around here?
+      <a routerLink="/auth/register">Create an account</a>
+    </p>
+  </section>
+</main>

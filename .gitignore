@@ -1,0 +1,31 @@
+# Angular / Node
+**/node_modules/
+**/.angular/
+**/dist/
+**/out-tsc/
+**/coverage/
+
+# Python
+**/.venv/
+**/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+
+# ASP.NET Core
+**/bin/
+**/obj/
+
+# Fișiere locale ale editoarelor
+**/.vs/
+**/.idea/
+*.suo
+*.user
+
+# Fișiere temporare
+*.log
+*.tmp
+Thumbs.db
+.DS_Store

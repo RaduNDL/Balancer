@@ -1,0 +1,149 @@
+<main class="dashboard">
+  @if (auth.currentUser(); as user) {
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Your workspace, your pace</span>
+
+        <h1>
+          Good to see you, {{ user.fullName }}<span class="accent-dot">.</span>
+        </h1>
+
+        <p class="muted">
+          A little overview of the places where you make things happen.
+        </p>
+      </div>
+
+      <a class="button button-secondary" routerLink="/onboarding">
+        <span aria-hidden="true">✦</span>
+        Find my profile
+      </a>
+    </header>
+<!-- Contul fără apartenențe nu primește automat un rol de firmă. -->
+@if (user.memberships.length === 0) {
+  <section class="company-card">
+    <span class="personal-account-badge">Personal account</span>
+
+    <h2>Your account is ready. Choose your next step.</h2>
+
+    <p class="muted">
+      You do not have a company role yet.
+      Find your profile, create your workspace or connect with a company Owner.
+    </p>
+
+    <a class="button button-primary" routerLink="/onboarding">
+      Find my profile ✦
+    </a>
+  </section>
+}
+    <div class="overview-grid">
+      <!-- Numărul este calculat din apartenențele reale. -->
+      <article class="overview-card">
+        <span class="metric-icon" aria-hidden="true">▦</span>
+
+        <div>
+          <span class="muted">Connected workspaces</span>
+          <strong>{{ user.memberships.length }}</strong>
+        </div>
+      </article>
+
+      <article class="overview-note">
+        <span class="eyebrow">One account. Many possibilities.</span>
+
+        <p>
+          Your role belongs to each company.
+          You can own one workspace and contribute to another.
+        </p>
+      </article>
+    </div>
+
+  
+
+    <div class="workspace-layout">
+      <section class="workspace-list" aria-labelledby="companies-title">
+        <div class="section-heading">
+          <h2 id="companies-title">Your workspaces</h2>
+          <span class="count-pill">{{ user.memberships.length }}</span>
+        </div>
+
+        <div class="company-grid">
+          @for (
+            membership of user.memberships;
+            track membership.companyId
+          ) {
+            <article class="company-card workspace-card">
+              <div class="card-topline">
+                <span class="company-monogram" aria-hidden="true">
+                  {{ membership.companyName.slice(0, 1).toUpperCase() }}
+                </span>
+
+                <span
+                  class="role-badge"
+                  [attr.data-role]="membership.role"
+                >
+                  {{ membership.role }}
+                </span>
+              </div>
+
+              <h3>{{ membership.companyName }}</h3>
+             <!-- Descrierea rolului utilizatorului în această firmă. -->
+              <p class="muted">
+                {{ roleDescriptions[membership.role] }}
+              </p> 
+              
+              <a
+                class="company-link"
+                [routerLink]="['/companies', membership.companyId]"
+              >
+                Open workspace
+                <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+          } @empty {
+            <article class="company-card empty-state">
+              <span class="empty-symbol" aria-hidden="true">▦</span>
+
+              <h3>A fresh start.</h3>
+              <!-- Ghidare afișată când lista firmelor este goală. -->
+              <p class="muted">
+                Complete your profile setup or ask a company Owner
+                for an invitation.
+              </p>
+
+              <a class="text-link" routerLink="/onboarding">
+                Help me find my starting point →
+              </a>
+            </article>
+          }
+        </div>
+      </section>
+
+            <!-- Acces rapid la mesageria privată. -->
+      <aside
+        class="company-card create-company-panel"
+        aria-labelledby="workspace-access-title"
+      >
+        <span class="eyebrow">Your next connection</span>
+
+        <h2 id="workspace-access-title">Keep your team close.</h2>
+
+        <p class="muted">
+          Your company roles are confirmed by the backend.
+          Creating your first workspace uses the profile questionnaire.
+        </p>
+
+        <p class="field-help">
+          For an invitation, contact the company Owner.
+          An invitation code can be shared through an accepted
+          private conversation.
+        </p>
+
+        <a
+          class="button button-primary full-width"
+          routerLink="/messages"
+        >
+          Open messages ↗
+        </a>
+      </aside>
+    </div>
+  }
+</main>

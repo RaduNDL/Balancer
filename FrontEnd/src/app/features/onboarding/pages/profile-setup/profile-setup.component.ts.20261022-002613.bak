@@ -1,0 +1,240 @@
+import {
+  Component,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
+
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+
+import { RouterLink } from '@angular/router';
+
+import {
+  CompanyMembership
+} from '../../../../core/models/auth.models';
+
+import {
+  AuthService
+} from '../../../../core/services/auth.service';
+
+import {
+  CompanyIntent,
+  OnboardingRecommendation,
+  OnboardingService
+} from '../../../../core/services/onboarding.service';
+
+@Component({
+  selector: 'app-profile-setup',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    RouterLink
+  ],
+  templateUrl: './profile-setup.component.html'
+})
+export class ProfileSetupComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly onboarding = inject(OnboardingService);
+
+  readonly auth = inject(AuthService);
+
+  // Separăm cererea către AI de operația care creează firma.
+  readonly loading = signal(false);
+  readonly creatingCompany = signal(false);
+
+  readonly errorMessage = signal('');
+  readonly companyError = signal('');
+
+  readonly result =
+    signal<OnboardingRecommendation | null>(null);
+
+  // După crearea reușită păstrăm răspunsul confirmat de backend.
+  // Astfel ascundem formularul și prevenim retrimiterea accidentală.
+  readonly createdCompany =
+    signal<CompanyMembership | null>(null);
+
+  readonly isPersonalAccount = computed(() => {
+    const user = this.auth.currentUser();
+
+    return user !== null && user.memberships.length === 0;
+  });
+
+  readonly modelLabel = computed(() => {
+    const recommendation = this.result();
+
+    if (recommendation?.recommendedRole === 'NeedsReview') {
+      return 'One more detail would help.';
+    }
+
+    return recommendation?.recommendedRole ?? '';
+  });
+
+  // Această condiție controlează pasul sugerat în interfață.
+  // Permisiunile reale continuă să fie stabilite de backend.
+  readonly canCreateWorkspace = computed(() => {
+    const recommendation = this.result();
+
+    return recommendation?.recommendedRole === 'Owner'
+      && recommendation.nextAction === 'CreateWorkspace'
+      && !recommendation.needsClarification;
+  });
+
+  readonly form = this.fb.nonNullable.group({
+    companyIntent:
+      this.fb.nonNullable.control<CompanyIntent>(
+        'unsure',
+        Validators.required
+      ),
+
+    workSummary: ['', [
+      Validators.required,
+      Validators.minLength(5),
+      Validators.maxLength(2000)
+    ]],
+
+    decisionScope: ['', [
+      Validators.required,
+      Validators.minLength(5),
+      Validators.maxLength(2000)
+    ]],
+
+    teamScope: ['', [
+      Validators.required,
+      Validators.minLength(5),
+      Validators.maxLength(2000)
+    ]]
+  });
+
+  // Numele firmei este cerut numai pentru crearea unui workspace.
+  readonly companyForm = this.fb.nonNullable.group({
+    name: ['', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(200)
+    ]]
+  });
+
+  clearRecommendation(): void {
+    // Dacă răspunsurile se schimbă, rezultatul anterior nu mai
+    // reprezintă răspunsurile afișate în formular.
+    if (!this.loading() && !this.creatingCompany()) {
+      this.result.set(null);
+      this.errorMessage.set('');
+      this.companyError.set('');
+    }
+  }
+
+  async submit(): Promise<void> {
+    if (this.loading() || this.creatingCompany()) {
+      return;
+    }
+
+    this.errorMessage.set('');
+    this.companyError.set('');
+    this.result.set(null);
+
+    const values = this.form.getRawValue();
+
+    // Validators.minLength verifică lungimea brută.
+    // Verificăm separat lungimea după eliminarea spațiilor exterioare.
+    const hasShortAnswer = [
+      values.workSummary,
+      values.decisionScope,
+      values.teamScope
+    ].some(value => value.trim().length < 5);
+
+    if (this.form.invalid || hasShortAnswer) {
+      this.form.markAllAsTouched();
+
+      this.errorMessage.set(
+        'Please describe your work using at least 5 characters in each answer.'
+      );
+
+      return;
+    }
+
+    this.loading.set(true);
+
+    try {
+      const recommendation = await this.onboarding.recommend({
+        ...values,
+        workSummary: values.workSummary.trim(),
+        decisionScope: values.decisionScope.trim(),
+        teamScope: values.teamScope.trim()
+      });
+
+      this.result.set(recommendation);
+    } catch (error) {
+      this.errorMessage.set(
+        this.auth.getErrorMessage(error)
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async createWorkspace(): Promise<void> {
+    // Acceptăm un singur proces de creare în această pagină.
+    if (
+      this.loading()
+      || this.creatingCompany()
+      || this.createdCompany()
+      || !this.canCreateWorkspace()
+    ) {
+      return;
+    }
+
+    this.companyError.set('');
+
+    const name = this.companyForm.controls.name.value.trim();
+
+    if (this.companyForm.invalid || name.length < 2) {
+      this.companyForm.markAllAsTouched();
+
+      this.companyError.set(
+        'Enter a company name between 2 and 200 characters.'
+      );
+
+      return;
+    }
+
+    this.creatingCompany.set(true);
+
+    try {
+      // Endpointul existent creează firma și apartenența Owner.
+      // Nu trimitem către server un rol ales în browser.
+      const membership = await this.auth.createCompany(name);
+
+      this.createdCompany.set(membership);
+
+      // Actualizăm navbarul și lista firmelor cu răspunsul backendului.
+      this.auth.currentUser.update(user => {
+        if (!user) {
+          return user;
+        }
+
+        return {
+          ...user,
+          memberships: [
+            ...user.memberships.filter(
+              item => item.companyId !== membership.companyId
+            ),
+            membership
+          ]
+        };
+      });
+
+      this.companyForm.reset();
+    } catch (error) {
+      this.companyError.set(
+        this.auth.getErrorMessage(error)
+      );
+    } finally {
+      this.creatingCompany.set(false);
+    }
+  }
+}

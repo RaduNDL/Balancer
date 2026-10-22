@@ -1,0 +1,133 @@
+<main class="auth-layout">
+  <section class="auth-story" aria-labelledby="register-story">
+    <span class="eyebrow">Start with you</span>
+
+    <h1 id="register-story">
+      One account.<br>
+      A world of <em>possibilities.</em>
+    </h1>
+
+    <p>
+      Create your own workspace or join a company you work with.
+      You can decide after signing in.
+    </p>
+
+    <ol class="story-steps">
+      <li>
+        <span>01</span>
+        <div>
+          <strong>Create your account</strong>
+          <p>A personal login that stays with you.</p>
+        </div>
+      </li>
+
+      <li>
+        <span>02</span>
+        <div>
+          <strong>Find your starting point</strong>
+          <p>A short questionnaire about how you work.</p>
+        </div>
+      </li>
+
+      <li>
+        <span>03</span>
+        <div>
+          <strong>Make room for your business</strong>
+          <p>Create a workspace or connect with your team.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="auth-card" aria-labelledby="register-title">
+    <span class="eyebrow">Let's get you started</span>
+
+    <h2 id="register-title">Your next chapter starts here.</h2>
+    <p class="muted">No company needed to create an account.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="full-name">Full name</label>
+
+        <input
+          id="full-name"
+          type="text"
+          formControlName="fullName"
+          autocomplete="name"
+          minlength="2"
+          maxlength="150"
+          placeholder="Your name"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email address</label>
+
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+          maxlength="254"
+          placeholder="you@company.com"
+          required
+        >
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">Password</label>
+
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            minlength="12"
+            maxlength="128"
+            aria-describedby="password-help"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-password">Confirm password</label>
+
+          <input
+            id="confirm-password"
+            type="password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            maxlength="128"
+            required
+          >
+        </div>
+      </div>
+
+      <p id="password-help" class="field-help">
+        Use 12–128 characters. This is your Balancer password.
+      </p>
+
+      @if (errorMessage()) {
+        <p class="message error" role="alert">
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <button
+        class="button button-primary full-width"
+        type="submit"
+        [disabled]="loading()"
+      >
+        {{ loading() ? 'Creating account…' : 'Create account' }}
+        <span aria-hidden="true">↗</span>
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already part of Balancer?
+      <a routerLink="/auth/login">Sign in</a>
+    </p>
+  </section>
+</main>

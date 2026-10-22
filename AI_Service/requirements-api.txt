@@ -1,0 +1,7 @@
+# Păstrăm bibliotecile utilizate la antrenare.
+-r requirements.txt
+
+# Bibliotecile pentru servirea modelului prin HTTP.
+fastapi==0.158.1
+uvicorn==0.54.0
+pydantic==2.14.1

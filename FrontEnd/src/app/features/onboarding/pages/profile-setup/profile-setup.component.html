@@ -1,0 +1,285 @@
+<main class="dashboard onboarding-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Your first chapter</span>
+
+      <h1>Let's find your <em>place.</em></h1>
+
+      <p class="muted">
+        A personal account first.
+        The right workspace access next.
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="message error" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (checking()) {
+    <p role="status">Checking your profile…</p>
+  } @else if (!ready()) {
+    <button
+      class="button button-secondary"
+      type="button"
+      (click)="loadStatus()"
+    >
+      Try again
+    </button>
+  } @else if (alreadyMember()) {
+    <section class="company-card">
+      <h2>Your account already has a workspace.</h2>
+
+      <p>Your existing roles have been preserved.</p>
+
+      <a
+        class="button button-primary"
+        routerLink="/dashboard"
+      >
+        Open my workspaces ↗
+      </a>
+    </section>
+  } @else {
+    <div class="onboarding-layout">
+      <section class="company-card questionnaire">
+        <h2>Choose your starting point.</h2>
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="submit()"
+        >
+          <!-- Blocăm editarea în timpul verificării sau salvării. -->
+          <fieldset
+            class="questionnaire-controls"
+            [disabled]="loading() || verifyingInvitation()"
+          >
+            <fieldset class="intent-fieldset">
+              <legend>01 — What brings you here?</legend>
+
+              <div class="intent-options">
+                <label class="intent-option">
+                  <input
+                    type="radio"
+                    formControlName="companyIntent"
+                    value="create_workspace"
+                    (change)="changeIntent()"
+                  >
+
+                  <span>
+                    <strong>Create my own workspace</strong>
+                    <small>
+                      Set up a new workspace that I will manage.
+                    </small>
+                  </span>
+                </label>
+
+                <label class="intent-option">
+                  <input
+                    type="radio"
+                    formControlName="companyIntent"
+                    value="join_workspace"
+                    (change)="changeIntent()"
+                  >
+
+                  <span>
+                    <strong>Join an existing company</strong>
+                    <small>
+                      Use an invitation approved by its Owner.
+                    </small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            @if (
+              form.controls.companyIntent.value === 'create_workspace'
+            ) {
+              <div class="form-group">
+                <label for="setup-company">
+                  02 — Company name
+                </label>
+
+                <input
+                  id="setup-company"
+                  formControlName="companyName"
+                  maxlength="200"
+                  autocomplete="organization"
+                >
+              </div>
+
+              <label class="profile-confirmation">
+                <input
+                  type="checkbox"
+                  formControlName="confirmOwnership"
+                >
+
+                <span>
+                  I want to create a new workspace and take
+                  responsibility for its settings, invitations
+                  and members as its Owner.
+                </span>
+              </label>
+
+              <p class="field-help">
+                This creates a workspace in Balancer.
+                It does not register a legal company
+                or verify legal ownership.
+              </p>
+            }
+
+            @if (
+              form.controls.companyIntent.value === 'join_workspace'
+            ) {
+              <div class="form-group">
+                <label for="setup-invitation">
+                  02 — Invitation code
+                </label>
+
+                <textarea
+                  id="setup-invitation"
+                  formControlName="invitationCode"
+                  rows="3"
+                  maxlength="4096"
+                  autocomplete="off"
+                  spellcheck="false"
+                  (input)="clearInvitation()"
+                ></textarea>
+              </div>
+
+              <!-- Verificarea codului este separată de finalizare. -->
+              <button
+                class="button button-secondary"
+                type="button"
+                (click)="validateInvitation()"
+              >
+                {{ verifyingInvitation()
+                  ? 'Checking…'
+                  : 'Verify invitation' }}
+              </button>
+
+              @if (invitation(); as invite) {
+                <div class="next-step" aria-live="polite">
+                  <h3>{{ invite.companyName }}</h3>
+
+                  <p>
+                    Approved roles:
+                    {{ invite.allowedRoles.join(', ') }}
+                  </p>
+
+                  <p class="field-help">
+                    Expires:
+                    {{ invite.expiresAtUtc | date:'medium' }}
+                  </p>
+                </div>
+
+                <div class="form-group">
+                  <label for="setup-focus">
+                    03 — What will you mainly do in this workspace?
+                  </label>
+
+                  <select
+                    id="setup-focus"
+                    formControlName="workFocus"
+                  >
+                    <option value="unsure">
+                      Choose your main responsibility
+                    </option>
+
+                    @for (
+                      option of availableWorkOptions();
+                      track option.value
+                    ) {
+                      <option [value]="option.value">
+                        {{ option.title }} — {{ option.role }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                @for (
+                  option of availableWorkOptions();
+                  track option.value
+                ) {
+                  @if (
+                    option.value === form.controls.workFocus.value
+                  ) {
+                    <p class="field-help">
+                      {{ option.description }}
+                    </p>
+                  }
+                }
+
+                <label class="profile-confirmation">
+                  <input
+                    type="checkbox"
+                    formControlName="acceptInvitation"
+                  >
+
+                  <span>
+                    I accept the invitation and want to join
+                    this workspace with the role shown
+                    in the summary.
+                  </span>
+                </label>
+              }
+            }
+
+            <button
+              class="button button-primary full-width"
+              type="submit"
+            >
+              {{ loading()
+                ? 'Saving your workspace…'
+                : 'Confirm and continue ↗' }}
+            </button>
+          </fieldset>
+        </form>
+      </section>
+
+      <aside class="recommendation-column">
+        <section
+          class="recommendation-card"
+          aria-live="polite"
+        >
+          <span class="eyebrow">Your setup summary</span>
+
+          @if (selectedRole(); as role) {
+            <h2>{{ role }}</h2>
+
+            @if (
+              form.controls.companyIntent.value === 'create_workspace'
+            ) {
+              <p>
+                You will manage the new workspace as its Owner.
+              </p>
+            } @else {
+              <p>
+                This role matches your selected responsibility
+                and is permitted by your invitation.
+              </p>
+            }
+
+            <p class="field-help">
+              The role is saved only after the server
+              validates your submission.
+            </p>
+          } @else {
+            <h2>A clear place to start.</h2>
+
+            <p>
+              Create a new workspace or verify an invitation
+              to join a team.
+            </p>
+          }
+
+          <p class="field-help">
+            This setup uses explicit choices and permission checks.
+            It does not infer ownership from your writing style.
+          </p>
+        </section>
+      </aside>
+    </div>
+  }
+</main>

@@ -1,0 +1,425 @@
+<main class="dashboard">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">The people behind the work</span>
+      <h1>Find your <em>people.</em></h1>
+      <p class="muted">
+        Discover profiles and connect with permission.
+      </p>
+    </div>
+
+    <span class="count-pill">{{ total() }} people</span>
+  </header>
+
+  @if (error()) {
+    <p class="message error" role="alert">{{ error() }}</p>
+  }
+
+  @if (notice()) {
+    <p class="message success" role="status">{{ notice() }}</p>
+  }
+
+  <!-- Setările proprii sunt separate de profilul vizibil celorlalți. -->
+  <details class="company-card people-settings">
+    <summary>Edit my public profile</summary>
+
+    @if (profileReady()) {
+      <form
+        [formGroup]="profileForm"
+        (ngSubmit)="saveProfile()"
+      >
+        <fieldset
+          class="questionnaire-controls"
+          [disabled]="saving()"
+        >
+          <div class="form-row">
+            <div class="form-group">
+              <label for="people-name">Full name</label>
+              <input
+                id="people-name"
+                formControlName="fullName"
+                maxlength="150"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="people-title">Job title</label>
+              <input
+                id="people-title"
+                formControlName="jobTitle"
+                maxlength="100"
+                placeholder="Designer, accountant, developer…"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="people-bio">About me</label>
+            <textarea
+              id="people-bio"
+              formControlName="bio"
+              rows="3"
+              maxlength="1000"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="people-skills">
+              Skills, separated by commas
+            </label>
+            <input
+              id="people-skills"
+              formControlName="skills"
+              maxlength="200"
+              placeholder="Design, Accounting, Project planning"
+            >
+          </div>
+
+          <label class="people-check">
+            <input
+              type="checkbox"
+              formControlName="isDiscoverable"
+            >
+            Show my profile in People to signed-in members.
+          </label>
+
+          <label class="people-check">
+            <input
+              type="checkbox"
+              formControlName="showEmail"
+            >
+            Show my email on my profile and in conversations.
+          </label>
+
+          <button
+            class="button button-primary"
+            type="submit"
+          >
+            {{ saving() ? 'Saving…' : 'Save profile' }}
+          </button>
+        </fieldset>
+      </form>
+    } @else {
+      <button
+        class="button button-secondary"
+        type="button"
+        (click)="loadOwnProfile()"
+      >
+        Load profile settings
+      </button>
+    }
+  </details>
+
+  <!-- Un cont poate accepta invitații în mai multe firme. -->
+  <details class="company-card people-settings">
+    <summary>Accept a workspace invitation</summary>
+
+    <form
+      [formGroup]="joinForm"
+      (ngSubmit)="acceptJoin()"
+    >
+      <fieldset
+        class="questionnaire-controls"
+        [disabled]="joining() || verifying()"
+      >
+        <div class="form-group">
+          <label for="people-join-code">
+            Invitation code
+          </label>
+          <textarea
+            id="people-join-code"
+            formControlName="code"
+            rows="3"
+            maxlength="4096"
+            spellcheck="false"
+            (input)="clearJoin()"
+          ></textarea>
+        </div>
+
+        <button
+          class="button button-secondary"
+          type="button"
+          (click)="verifyJoin()"
+        >
+          {{ verifying() ? 'Checking…' : 'Verify invitation' }}
+        </button>
+
+        @if (joinPreview(); as preview) {
+          <h3>{{ preview.companyName }}</h3>
+
+          <p class="field-help">
+            Expires:
+            {{ preview.expiresAtUtc | date:'medium' }}
+          </p>
+
+          <div class="form-group">
+            <label for="people-join-role">
+              Approved role
+            </label>
+            <select
+              id="people-join-role"
+              formControlName="role"
+            >
+              <option value="">Choose a role</option>
+
+              @for (role of preview.allowedRoles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+
+          <label class="people-check">
+            <input
+              type="checkbox"
+              formControlName="accepted"
+            >
+            I accept this invitation and the selected workspace role.
+          </label>
+
+          <button
+            class="button button-primary"
+            type="submit"
+          >
+            {{ joining() ? 'Joining…' : 'Join workspace' }}
+          </button>
+        }
+      </fieldset>
+    </form>
+  </details>
+
+  <form
+    class="people-search"
+    [formGroup]="searchForm"
+    (ngSubmit)="loadPeople(1)"
+  >
+    <div>
+      <label for="people-search">
+        Search by name or job title
+      </label>
+      <input
+        id="people-search"
+        formControlName="search"
+        maxlength="80"
+        placeholder="Find someone…"
+        type="search"
+      >
+    </div>
+
+    <button
+      class="button button-primary"
+      type="submit"
+      [disabled]="loading()"
+    >
+      Search
+    </button>
+  </form>
+
+  <div class="people-layout">
+    <section aria-label="People directory">
+      @if (loading()) {
+        <p role="status">Loading people…</p>
+      }
+
+      <div class="people-grid">
+        @for (person of items(); track person.id) {
+          <button
+            class="person-card"
+            type="button"
+            (click)="open(person)"
+            [class.selected]="selected()?.id === person.id"
+          >
+            <span class="people-avatar" aria-hidden="true">
+              {{ initials(person.fullName) }}
+            </span>
+
+            <strong>{{ person.fullName }}</strong>
+
+            <span class="muted">
+              {{ person.jobTitle || 'Balancer member' }}
+            </span>
+
+            <span class="person-link">View profile ↗</span>
+          </button>
+        } @empty {
+          @if (!loading()) {
+            <p>No visible profiles match your search.</p>
+          }
+        }
+      </div>
+
+      <nav
+        class="people-pagination"
+        aria-label="Directory pages"
+      >
+        <button
+          class="button button-secondary"
+          type="button"
+          [disabled]="page() <= 1 || loading()"
+          (click)="loadPeople(page() - 1)"
+        >
+          Previous
+        </button>
+
+        <span>Page {{ page() }}</span>
+
+        <button
+          class="button button-secondary"
+          type="button"
+          [disabled]="page() * 12 >= total() || loading()"
+          (click)="loadPeople(page() + 1)"
+        >
+          Next
+        </button>
+      </nav>
+    </section>
+
+    <aside
+      class="company-card people-profile"
+      aria-label="Selected profile"
+    >
+      @if (selected(); as person) {
+        <span class="people-avatar" aria-hidden="true">
+          {{ initials(person.fullName) }}
+        </span>
+
+        <h2>{{ person.fullName }}</h2>
+
+        <p class="muted">
+          {{ person.jobTitle || 'Balancer member' }}
+        </p>
+
+        @if (person.bio) {
+          <p class="people-bio">{{ person.bio }}</p>
+        }
+
+        <div class="people-skills">
+          @for (skill of skills(person); track $index) {
+            <span>{{ skill }}</span>
+          }
+        </div>
+
+        @if (person.email) {
+          <p class="people-email">{{ person.email }}</p>
+        }
+
+        @if (person.id !== auth.currentUser()?.id) {
+          <button
+            class="button button-primary full-width"
+            type="button"
+            [disabled]="contacting()"
+            (click)="contact()"
+          >
+            {{ contacting()
+              ? 'Opening…'
+              : 'Request conversation' }}
+          </button>
+
+          <p class="field-help">
+            Messages require the other person's acceptance.
+          </p>
+
+          @if (ownerCompanies().length) {
+            <h3>Invite to my workspace</h3>
+
+            <form
+              [formGroup]="inviteForm"
+              (ngSubmit)="invite()"
+              (change)="inviteResult.set(null)"
+            >
+              <fieldset
+                class="questionnaire-controls"
+                [disabled]="inviting()"
+              >
+                <div class="form-group">
+                  <label for="people-invite-company">
+                    Workspace
+                  </label>
+
+                  <select
+                    id="people-invite-company"
+                    formControlName="companyId"
+                  >
+                    @for (
+                      company of ownerCompanies();
+                      track company.companyId
+                    ) {
+                      <option [value]="company.companyId">
+                        {{ company.companyName }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <fieldset class="intent-fieldset">
+                  <legend>Roles you approve</legend>
+
+                  @for (role of roles; track role) {
+                    <label class="people-check">
+                      <input
+                        type="checkbox"
+                        [formControlName]="role"
+                      >
+                      {{ role }}
+                    </label>
+                  }
+                </fieldset>
+
+                <button
+                  class="button button-secondary"
+                  type="submit"
+                >
+                  {{ inviting()
+                    ? 'Creating…'
+                    : 'Create invitation' }}
+                </button>
+              </fieldset>
+            </form>
+          }
+
+          @if (inviteResult(); as invite) {
+            <div
+              class="people-invitation"
+              aria-live="polite"
+            >
+              <label for="people-generated-code">
+                Invitation code
+              </label>
+
+              <textarea
+                id="people-generated-code"
+                [value]="invite.code"
+                rows="4"
+                readonly
+              ></textarea>
+
+              <p class="field-help">
+                Expires:
+                {{ invite.expiresAtUtc | date:'medium' }}.
+                Share it privately in an accepted conversation.
+                The recipient can accept it in People.
+              </p>
+
+              <button
+                class="button button-secondary"
+                type="button"
+                (click)="copy()"
+              >
+                Copy code
+              </button>
+            </div>
+          }
+        } @else {
+          <p class="field-help">
+            This is your public profile preview.
+          </p>
+        }
+      } @else {
+        <h2>A little more connected.</h2>
+
+        <p class="muted">
+          Select someone to view their profile and connection options.
+        </p>
+      }
+    </aside>
+  </div>
+</main>

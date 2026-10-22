@@ -1,0 +1,189 @@
+<main class="dashboard">
+  <a class="back-link" routerLink="/dashboard">
+    ← All workspaces
+  </a>
+
+  @if (loading()) {
+    <div class="loading-card" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      Loading your workspace…
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <p class="message error" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (successMessage()) {
+    <p class="message success" role="status">
+      {{ successMessage() }}
+    </p>
+  }
+
+  @if (company(); as currentCompany) {
+  <!-- Afișăm formularul de invitație numai proprietarului firmei. -->
+@if (canAddMembers()) {
+  <app-onboarding-invitation
+    [companyId]="currentCompany.companyId"
+  ></app-onboarding-invitation>
+}
+    <header class="page-header company-heading">
+      <div>
+        <span class="eyebrow">Company workspace</span>
+
+        <h1>
+          {{ currentCompany.companyName }}<span class="accent-dot">.</span>
+        </h1>
+
+        <p class="muted">The people behind the work.</p>
+      </div>
+
+      <span
+        class="role-badge role-badge-large"
+        [attr.data-role]="currentCompany.role"
+      >
+        Your role: {{ currentCompany.role }}
+      </span>
+    </header>
+
+    <div
+      class="members-layout"
+      [class.single-column]="!canAddMembers()"
+    >
+      @if (canViewMembers()) {
+        <section
+          class="company-card members-panel"
+          aria-labelledby="members-title"
+        >
+          <div class="section-heading">
+            <h2 id="members-title">Your people</h2>
+            <span class="count-pill">{{ members().length }}</span>
+          </div>
+
+          <p class="muted">
+            Active accounts connected to this workspace.
+          </p>
+
+          <div class="table-scroll">
+            <table class="members-table">
+              <thead>
+                <tr>
+                  <th scope="col">Person</th>
+                  <th scope="col">Email address</th>
+                  <th scope="col">Company role</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (member of members(); track member.userId) {
+                  <tr>
+                    <td>
+                      <span class="person-cell">
+                        <span
+                          class="avatar avatar-small"
+                          aria-hidden="true"
+                        >
+                          {{ member.fullName.slice(0, 1).toUpperCase() }}
+                        </span>
+
+                        <strong>{{ member.fullName }}</strong>
+                      </span>
+                    </td>
+
+                    <td class="muted">{{ member.email }}</td>
+
+                    <td>
+                      <span
+                        class="role-badge"
+                        [attr.data-role]="member.role"
+                      >
+                        {{ member.role }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3">No members to display.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      } @else {
+        <section class="company-card welcome-panel">
+          <span class="eyebrow">You're part of the team</span>
+
+          <h2>A place for your contribution.</h2>
+
+          <p>
+            You belong to this workspace as
+            <strong>{{ currentCompany.role }}</strong>.
+          </p>
+
+          <p class="muted">
+            Your company role determines the resources available to you.
+            Member management is reserved for authorized administrators.
+          </p>
+        </section>
+      }
+
+      @if (canAddMembers()) {
+        <aside class="company-card create-company-panel">
+          <span class="eyebrow">Grow your circle</span>
+
+          <h2>Add a teammate.</h2>
+
+          <p class="muted">
+            Connect someone who already has a Balancer account.
+          </p>
+
+          <form [formGroup]="memberForm" (ngSubmit)="addMember()">
+            <div class="form-group">
+              <label for="member-email">Account email</label>
+
+              <input
+                id="member-email"
+                type="email"
+                formControlName="email"
+                placeholder="colleague@company.com"
+                maxlength="254"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="member-role">Company role</label>
+
+              <select
+                id="member-role"
+                formControlName="role"
+                required
+              >
+                @for (role of availableRoles; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            </div>
+
+            <button
+              class="button button-primary full-width"
+              type="submit"
+              [disabled]="addingMember()"
+            >
+              {{ addingMember() ? 'Adding…' : 'Add teammate' }}
+              <span aria-hidden="true">+</span>
+            </button>
+          </form>
+
+          <p class="field-help">
+            You assign the actual role.
+            Profile recommendations never grant company access.
+          </p>
+        </aside>
+      }
+    </div>
+  }
+</main>

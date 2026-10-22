@@ -1,0 +1,170 @@
+<!-- Permite trecerea directă la conținut prin tastatură. -->
+<a class="skip-link" href="#main-content">
+  Skip to content
+</a>
+
+<header class="site-header">
+  <div class="nav-wrap">
+    <!-- Logo-ul duce întotdeauna la pagina publică principală. -->
+    <a
+      class="brand"
+      routerLink="/"
+      (click)="menuOpen.set(false)"
+      aria-label="Balancer home"
+    >
+      <span class="brand-mark" aria-hidden="true">b</span>
+
+      <span>
+        balancer<span class="brand-dot">.</span>
+      </span>
+    </a>
+
+    <button
+      class="menu-toggle button button-ghost"
+      type="button"
+      aria-controls="main-navigation"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      {{ menuOpen() ? 'Close' : 'Menu' }}
+    </button>
+
+    <nav
+      id="main-navigation"
+      aria-label="Main navigation"
+      [class.is-open]="menuOpen()"
+    >
+      <div class="nav-links">
+        <!-- exact împiedică marcarea Home ca activ pe orice rută. -->
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="menuOpen.set(false)"
+        >
+          Home
+        </a>
+
+        <a
+          routerLink="/about"
+          routerLinkActive="active"
+          (click)="menuOpen.set(false)"
+        >
+          About
+        </a>
+
+        <a
+          routerLink="/contact"
+          routerLinkActive="active"
+          (click)="menuOpen.set(false)"
+        >
+          Contact
+        </a>
+
+        @if (auth.currentUser()) {
+          <a
+            routerLink="/people"
+            routerLinkActive="active"
+            (click)="menuOpen.set(false)"
+          >
+            People
+          </a>
+          <a
+            routerLink="/messages"
+            routerLinkActive="active"
+            (click)="menuOpen.set(false)"
+          >
+            Messages
+
+            @if (chat.requestCount()) {
+              <span class="chat-request-badge">
+                {{ chat.requestCount() }}
+              </span>
+            }
+          </a>
+          <a
+            routerLink="/dashboard"
+            routerLinkActive="active"
+            (click)="menuOpen.set(false)"
+          >
+            Workspaces
+          </a>
+
+          <a
+            routerLink="/onboarding"
+            routerLinkActive="active"
+            (click)="menuOpen.set(false)"
+          >
+            ✦ My profile
+          </a>
+        }
+      </div>
+
+      <div class="nav-account">
+        @if (auth.currentUser(); as user) {
+          <span class="avatar">{{ initials() }}</span>
+
+          <div class="account-summary">
+            <span class="nav-name">{{ user.fullName }}</span>
+
+            @if (isPersonalAccount()) {
+              <small class="personal-account-label">
+                Personal account
+              </small>
+            }
+          </div>
+
+          <button
+            class="button button-ghost button-small"
+            type="button"
+            [disabled]="signingOut()"
+            (click)="logout()"
+          >
+            {{ signingOut() ? 'Signing out…' : 'Sign out' }}
+          </button>
+        } @else if (checkingSession()) {
+          <span class="muted">Checking session…</span>
+        } @else {
+          <a
+            class="button button-ghost button-small"
+            routerLink="/auth/login"
+            (click)="menuOpen.set(false)"
+          >
+            Sign in
+          </a>
+
+          <a
+            class="button button-primary button-small"
+            routerLink="/auth/register"
+            (click)="menuOpen.set(false)"
+          >
+            Get started ↗
+          </a>
+        }
+      </div>
+    </nav>
+  </div>
+</header>
+
+@if (navError()) {
+  <p class="message error shell-notice" role="alert">
+    {{ navError() }}
+  </p>
+}
+
+<div
+  id="main-content"
+  class="app-content"
+  tabindex="-1"
+>
+  <router-outlet></router-outlet>
+</div>
+
+<footer class="site-footer">
+  <span>Balancer — room for your business to grow.</span>
+
+  <div class="public-footer-links">
+    <a routerLink="/about">About us</a>
+    <a routerLink="/contact">Contact us</a>
+  </div>
+</footer>

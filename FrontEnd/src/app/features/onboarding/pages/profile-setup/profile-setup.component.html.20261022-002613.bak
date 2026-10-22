@@ -1,0 +1,331 @@
+<main class="dashboard onboarding-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Your starting point</span>
+
+      <h1>
+        Find the right place<br>
+        for your <em>work.</em>
+      </h1>
+
+      @if (isPersonalAccount()) {
+        <span class="personal-account-badge">
+          Personal account
+        </span>
+
+        <p class="muted">
+          Start with your personal account.
+          Discover whether you want to build a workspace or join a team.
+        </p>
+      } @else {
+        <p class="muted">
+          Explore your profile or create another workspace.
+          Your existing company roles stay the same.
+        </p>
+      }
+    </div>
+
+    <a class="button button-ghost" routerLink="/dashboard">
+      My workspaces →
+    </a>
+  </header>
+
+  <div class="onboarding-layout">
+    <section
+      class="company-card questionnaire"
+      aria-labelledby="questionnaire-title"
+    >
+      <div class="section-heading">
+        <h2 id="questionnaire-title">How do you work?</h2>
+        <span class="count-pill">4 questions</span>
+      </div>
+
+      <p class="muted">
+        Answer in English and describe your actual responsibilities.
+        Leave out confidential information.
+      </p>
+
+      <!-- Modificarea răspunsurilor invalidează recomandarea anterioară. -->
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        (input)="clearRecommendation()"
+        (change)="clearRecommendation()"
+      >
+        <!-- Blocăm editarea în timpul operațiilor în desfășurare. -->
+        <fieldset
+          class="questionnaire-controls"
+          [disabled]="loading() || creatingCompany()"
+        >
+          <fieldset class="intent-fieldset">
+            <legend>
+              <span class="question-number">01</span>
+              What brings you here?
+            </legend>
+
+            <div class="intent-options">
+              <label class="intent-option">
+                <input
+                  type="radio"
+                  formControlName="companyIntent"
+                  value="create_workspace"
+                >
+
+                <span>
+                  <strong>Create my own workspace</strong>
+                  <small>I want a workspace for my business.</small>
+                </span>
+              </label>
+
+              <label class="intent-option">
+                <input
+                  type="radio"
+                  formControlName="companyIntent"
+                  value="join_workspace"
+                >
+
+                <span>
+                  <strong>Join an existing team</strong>
+                  <small>I work with a company that already exists.</small>
+                </span>
+              </label>
+
+              <label class="intent-option">
+                <input
+                  type="radio"
+                  formControlName="companyIntent"
+                  value="unsure"
+                >
+
+                <span>
+                  <strong>Explore my options</strong>
+                  <small>I am not sure where to begin yet.</small>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-group question-field">
+            <label for="work-summary">
+              <span class="question-number">02</span>
+              What do you spend most of your time doing?
+            </label>
+
+            <textarea
+              id="work-summary"
+              formControlName="workSummary"
+              rows="4"
+              minlength="5"
+              maxlength="2000"
+              placeholder="Describe your main activities and responsibilities."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group question-field">
+            <label for="decision-scope">
+              <span class="question-number">03</span>
+              What decisions are you responsible for?
+            </label>
+
+            <textarea
+              id="decision-scope"
+              formControlName="decisionScope"
+              rows="3"
+              minlength="5"
+              maxlength="2000"
+              placeholder="What do you decide, approve or organize?"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group question-field">
+            <label for="team-scope">
+              <span class="question-number">04</span>
+              How do you work with other people?
+            </label>
+
+            <textarea
+              id="team-scope"
+              formControlName="teamScope"
+              rows="3"
+              minlength="5"
+              maxlength="2000"
+              placeholder="Do you own the business, coordinate people or complete assigned tasks?"
+              required
+            ></textarea>
+          </div>
+
+          @if (errorMessage()) {
+            <p class="message error" role="alert">
+              {{ errorMessage() }}
+            </p>
+          }
+
+          <button
+            class="button button-primary full-width"
+            type="submit"
+            [disabled]="loading() || creatingCompany()"
+          >
+            @if (loading()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+
+            {{ loading() ? 'Finding your profile…' : 'Find my profile ✦' }}
+          </button>
+        </fieldset>
+      </form>
+    </section>
+
+    <aside class="recommendation-column" aria-live="polite">
+      @if (result(); as recommendation) {
+        <section class="recommendation-card">
+          <span class="eyebrow">Your suggested profile</span>
+          <span class="recommendation-symbol" aria-hidden="true">✦</span>
+
+          <h2>{{ modelLabel() }}</h2>
+          <p>{{ recommendation.explanation }}</p>
+
+          @if (recommendation.needsClarification) {
+            <div class="clarification-box">
+              <strong>One more detail would help.</strong>
+
+              <p>{{ recommendation.clarificationQuestion }}</p>
+
+              <small>
+                Update your answers with this detail and try again.
+              </small>
+            </div>
+          } @else {
+            <div class="module-tags">
+              @for (
+                module of recommendation.suggestedModules;
+                track module
+              ) {
+                <span>{{ module }}</span>
+              }
+            </div>
+
+            <p class="field-help">
+              These are suggested areas of work.
+              Some modules are still planned.
+            </p>
+
+            @if (canCreateWorkspace()) {
+              <!-- Afișăm rolul real după confirmarea backendului. -->
+              @if (createdCompany(); as company) {
+                <div class="next-step">
+                  <h3>Your workspace is ready.</h3>
+
+                  <p>
+                    You are now the
+                    <strong>{{ company.role }}</strong>
+                    of <strong>{{ company.companyName }}</strong>.
+                  </p>
+
+                  <a
+                    class="button button-primary full-width"
+                    [routerLink]="['/companies', company.companyId]"
+                  >
+                    Open my workspace ↗
+                  </a>
+                </div>
+              } @else {
+                <div class="next-step">
+                  <h3>Give your workspace a name.</h3>
+
+                  <p>
+                    Creating this workspace makes you its Owner.
+                  </p>
+
+                  <!-- Formular separat de chestionarul AI. -->
+                  <form
+                    [formGroup]="companyForm"
+                    (ngSubmit)="createWorkspace()"
+                  >
+                    <div class="form-group">
+                      <label for="new-workspace-name">
+                        Company name
+                      </label>
+
+                      <input
+                        id="new-workspace-name"
+                        type="text"
+                        formControlName="name"
+                        autocomplete="organization"
+                        minlength="2"
+                        maxlength="200"
+                        placeholder="Your company"
+                        required
+                      >
+                    </div>
+
+                    @if (companyError()) {
+                      <p class="message error" role="alert">
+                        {{ companyError() }}
+                      </p>
+                    }
+
+                    <button
+                      class="button button-primary full-width"
+                      type="submit"
+                      [disabled]="creatingCompany()"
+                    >
+                      {{ creatingCompany()
+                        ? 'Creating workspace…'
+                        : 'Create workspace and become Owner' }}
+                    </button>
+                  </form>
+                </div>
+              }
+            } @else {
+              <div class="next-step">
+                <h3>Connect with your company.</h3>
+
+                <p>
+                  Your suggested profile is
+                  <strong>{{ recommendation.recommendedRole }}</strong>.
+                </p>
+
+                <p>
+                  Ask the workspace Owner to add your account email
+                  and approve your company role.
+                </p>
+
+                <a class="text-link" routerLink="/dashboard">
+                  View my workspaces →
+                </a>
+              </div>
+            }
+          }
+        </section>
+      } @else {
+        <section class="recommendation-placeholder">
+          <span class="recommendation-symbol" aria-hidden="true">✦</span>
+          <span class="eyebrow">Your account. Your direction.</span>
+
+          <h2>
+            Start as yourself.<br>
+            Find what comes next.
+          </h2>
+
+          <p>
+            Describe your work and receive a suggested starting point.
+          </p>
+
+          <div class="profile-stack">
+            <span>Build a business</span>
+            <span>Join a team</span>
+            <span>Explore my profile</span>
+          </div>
+        </section>
+      }
+
+      <p class="recommendation-note">
+        The assistant recommends a profile. It does not assign access
+        to an existing company. Recommendations are not saved yet.
+        The model is experimental and was trained on a small synthetic dataset.
+      </p>
+    </aside>
+  </div>
+</main>

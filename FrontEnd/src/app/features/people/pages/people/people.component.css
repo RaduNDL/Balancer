@@ -1,0 +1,186 @@
+:host {
+  display: block;
+}
+
+.people-settings {
+  margin-bottom: 18px;
+}
+
+.people-settings summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.people-settings form {
+  margin-top: 22px;
+}
+
+.people-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+  font-weight: 500;
+}
+
+.people-check input {
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
+.people-search {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.people-search > div {
+  flex: 1;
+}
+
+.people-search label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.people-search input,
+.people-invitation textarea {
+  width: 100%;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Directorul și profilul selectat. */
+.people-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 24px;
+  align-items: start;
+}
+
+.people-layout > * {
+  min-width: 0;
+}
+
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.person-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 24px;
+  text-align: left;
+
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.person-card:hover,
+.person-card.selected {
+  border-color: var(--primary);
+  background: #f0f6e9;
+}
+
+.person-card strong,
+.person-card span {
+  overflow-wrap: anywhere;
+}
+
+/* Avatarul inițial folosește inițialele persoanei. */
+.people-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+
+  background: var(--mint);
+  color: var(--primary);
+  font-weight: 750;
+}
+
+.person-link {
+  margin-top: auto;
+  color: var(--primary);
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.people-profile h2 {
+  margin-top: 18px;
+}
+
+.people-profile h3 {
+  margin-top: 28px;
+}
+
+.people-bio {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.people-email {
+  overflow-wrap: anywhere;
+}
+
+.people-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.people-skills span {
+  padding: 5px 10px;
+  background: #edf3e7;
+  border-radius: 999px;
+  overflow-wrap: anywhere;
+}
+
+.people-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.people-invitation {
+  margin-top: 24px;
+}
+
+@media (max-width: 1000px) {
+  .people-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .people-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .people-search {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .people-pagination {
+    flex-wrap: wrap;
+  }
+}

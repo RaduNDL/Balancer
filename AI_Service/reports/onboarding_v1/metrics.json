@@ -1,0 +1,209 @@
+{
+  "created_at_utc": "2026-10-21T18:47:58.470671+00:00",
+  "dataset_sha256": "c2f122557b24f3aa619f5e8c4cb590f2d1ce4f34a89d7156ba5c4f05d5d2162a",
+  "python_version": "3.11.9",
+  "sklearn_version": "1.9.1",
+  "joblib_version": "1.5.2",
+  "input_columns": [
+    "company_intent",
+    "work_summary",
+    "decision_scope",
+    "team_scope"
+  ],
+  "labels": [
+    "Owner",
+    "Admin",
+    "Accountant",
+    "Manager",
+    "Employee",
+    "NeedsReview"
+  ],
+  "split_rows": {
+    "train": 120,
+    "validation": 24,
+    "test": 36
+  },
+  "split_scenarios": {
+    "train": 60,
+    "validation": 12,
+    "test": 18
+  },
+  "training_class_counts": {
+    "Owner": 20,
+    "Employee": 20,
+    "Admin": 20,
+    "Accountant": 20,
+    "NeedsReview": 20,
+    "Manager": 20
+  },
+  "selected_C": 2.0,
+  "selected_threshold": 0.35,
+  "validation_macro_f1": 1.0,
+  "validation_trials": [
+    {
+      "C": 0.5,
+      "threshold": 0.0,
+      "macro_f1": 0.9111111111111111
+    },
+    {
+      "C": 0.5,
+      "threshold": 0.35,
+      "macro_f1": 0.8412698412698414
+    },
+    {
+      "C": 0.5,
+      "threshold": 0.45,
+      "macro_f1": 0.11604938271604938
+    },
+    {
+      "C": 0.5,
+      "threshold": 0.55,
+      "macro_f1": 0.047619047619047616
+    },
+    {
+      "C": 2.0,
+      "threshold": 0.0,
+      "macro_f1": 0.9576719576719577
+    },
+    {
+      "C": 2.0,
+      "threshold": 0.35,
+      "macro_f1": 1.0
+    },
+    {
+      "C": 2.0,
+      "threshold": 0.45,
+      "macro_f1": 0.8831168831168831
+    },
+    {
+      "C": 2.0,
+      "threshold": 0.55,
+      "macro_f1": 0.8009768009768008
+    },
+    {
+      "C": 8.0,
+      "threshold": 0.0,
+      "macro_f1": 0.9576719576719577
+    },
+    {
+      "C": 8.0,
+      "threshold": 0.35,
+      "macro_f1": 1.0
+    },
+    {
+      "C": 8.0,
+      "threshold": 0.45,
+      "macro_f1": 1.0
+    },
+    {
+      "C": 8.0,
+      "threshold": 0.55,
+      "macro_f1": 0.8831168831168831
+    }
+  ],
+  "test_accuracy": 0.9444444444444444,
+  "test_macro_f1": 0.9428571428571427,
+  "baseline_test_macro_f1": 0.3088235294117647,
+  "test_confusion_matrix": [
+    [
+      6,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      6,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      4,
+      0,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      6,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      6
+    ]
+  ],
+  "test_classification_report": {
+    "Owner": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 6.0
+    },
+    "Admin": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 6.0
+    },
+    "Accountant": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 6.0
+    },
+    "Manager": {
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "f1-score": 0.8,
+      "support": 6.0
+    },
+    "Employee": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 6.0
+    },
+    "NeedsReview": {
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1-score": 0.8571428571428571,
+      "support": 6.0
+    },
+    "accuracy": 0.9444444444444444,
+    "macro avg": {
+      "precision": 0.9583333333333334,
+      "recall": 0.9444444444444443,
+      "f1-score": 0.9428571428571427,
+      "support": 36.0
+    },
+    "weighted avg": {
+      "precision": 0.9583333333333334,
+      "recall": 0.9444444444444444,
+      "f1-score": 0.9428571428571428,
+      "support": 36.0
+    }
+  },
+  "limitation": "Small synthetic dataset with paired paraphrases and AI-authored labels. No real-user validation. Model scores are not calibrated confidence. Recommendations do not grant permissions."
+}
